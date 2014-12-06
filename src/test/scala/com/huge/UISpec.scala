@@ -1,7 +1,7 @@
+package com.huge
+
 import org.scalatest._
 import org.scalatest.matchers.ShouldMatchers
-
-import com.huge._
 
 trait InterceptedIO extends IO {
   var messages: StringBuffer = new StringBuffer()
