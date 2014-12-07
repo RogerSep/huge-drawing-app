@@ -9,13 +9,18 @@ case class Canvas (private val layout: Array[Array[Char]] = Array()) {
   
   def contains(point: Point) = 0 < point.x && point.x <= width && 0 < point.y && point.y <= height
 
-  def apply(command: Command): Canvas = command(this)
+  def apply(commands: Command *): Canvas = 
+    commands.foldLeft(this) { (command, canvas) =>
+      canvas.apply(command)
+    }
 
   def map(f: (Int, Int, Char) => Char): Canvas = {
     Canvas(Array.tabulate(height, width){ (x, y) =>
         f(y + 1, x + 1, layout(x)(y))
       })
   }
+
+  def get(point: Point): Char = layout(point.y - 1)(point.x - 1)
 
   def isEmpty = layout.isEmpty
 

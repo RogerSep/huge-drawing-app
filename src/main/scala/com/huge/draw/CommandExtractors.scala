@@ -47,3 +47,26 @@ object RectangleCommandExtractor {
       case _ => throw new InvalidArguments("Two points must be specified; e.g. R 1 1 4 4")
     }
 }
+
+object BucketFillCommandExtractor {
+  def unapply(args: List[String]): Option[BucketFillCommand] =
+    if (args.isEmpty || args.head != "B") None
+    else args.tail match {
+      case x :: y :: xs => {
+        try {
+          val colour = xs match {
+            case Nil => ' '
+            case c :: Nil => 
+              if (c.length == 1) c.charAt(0) 
+              else throw new UnsupportedCommand("Can only paint with one character long colour")
+            case _ => throw new InvalidArguments("Too many argumets")
+          }
+
+          Some(BucketFillCommand(x.toInt, y.toInt, colour))
+        } catch {
+          case _: NumberFormatException => throw new InvalidArguments("Coordinates must be integers")
+        }
+      }
+      case _ => throw new InvalidArguments("A coordinate must be specified followed by an optional colour; whitespace is assumed when no colour is specified")
+    }
+}

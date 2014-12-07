@@ -286,3 +286,130 @@ class RectangleCommandSpec extends FunSpec with Matchers {
     }
   }
 }
+
+class BucketFillCommandSpec extends FunSpec with Matchers {
+  describe("BucketFillCommand") {
+    describe("When invalid parameters are passed") {
+      it("should throw InvalidArguments if any of them is not an integer") {        
+        forAll(Table(
+          ("a", "2", "3"),
+          ("1", "a", "3"),
+          ("1.1", "2", "3"),
+          ("1", "2.2", "3")
+        )) { (x, y, colour) =>
+          an [InvalidArguments] should be thrownBy {
+            BucketFillCommandExtractor.unapply(List("B", x, y, colour))
+          }
+        }
+      }
+
+      it("fails if the colour is not one character long") {
+        forAll(Table(
+          ("1", "1", "too long"),
+          ("1", "1", "")
+        )) { (x, y, colour) =>
+          an [UnsupportedCommand] should be thrownBy {
+            BucketFillCommandExtractor.unapply(List("B", x, y, colour))
+          }
+        }
+      }
+
+      it("fails if there are too many or too few arguments") {
+        an [InvalidArguments] should be thrownBy {
+          BucketFillCommandExtractor.unapply(List("B"))
+        }
+
+        an [InvalidArguments] should be thrownBy {
+          BucketFillCommandExtractor.unapply(List("B", "1"))
+        }
+
+        an [InvalidArguments] should be thrownBy {
+          BucketFillCommandExtractor.unapply(List("B", "1", "2", "3", "4"))
+        }
+      }
+
+      it("assumes white space when only the point is specified") {
+        List("B", "1", "2") match {
+          case BucketFillCommandExtractor(b) => b.colour should equal (' ')
+          case _ => fail("It should assume whitespace when only coordinates are given")
+        }
+      }
+    }
+
+    describe("When transforming a canvas") {
+      it("should paint the whole canvas when it's empty") {
+        Canvas()(
+          CreateCanvasCommand(20, 4), 
+          BucketFillCommand(1, 1, '*')
+        ).toString should equal (
+          """----------------------
+            _|********************|
+            _|********************|
+            _|********************|
+            _|********************|
+            _----------------------""".stripMargin('_'))
+      }
+
+      it("should paint a whole line when painting on it") {
+        Canvas()(
+            CreateCanvasCommand(20, 4),
+            LineCommand(1, 1, 20, 1),
+            BucketFillCommand(1, 1, '*')
+          ).toString should equal (
+          """----------------------
+            _|********************|
+            _|                    |
+            _|                    |
+            _|                    |
+            _----------------------""".stripMargin('_'))
+      }
+
+      it("should paint the border of a rectangle") {
+        Canvas()(
+            CreateCanvasCommand(20, 4),
+            RectangleCommand(1, 1, 5, 3),
+            BucketFillCommand(1, 1, '*')
+          ).toString should equal (
+          """----------------------
+            _|*****               |
+            _|*   *               |
+            _|*****               |
+            _|                    |
+            _----------------------""".stripMargin('_'))
+      }
+
+      it("should only fill the inside of a rectangle") {
+        Canvas()(
+            CreateCanvasCommand(20, 4),
+            RectangleCommand(1, 1, 5, 3),
+            BucketFillCommand(2, 2, '*')
+          ).toString should equal (
+          """----------------------
+            _|xxxxx               |
+            _|x***x               |
+            _|xxxxx               |
+            _|                    |
+            _----------------------""".stripMargin('_'))
+      }
+    }
+  }
+}
+
+class ComplexCommandSpec extends FlatSpec with Matchers {
+  it should "handle provided test data ok" in {
+    Canvas()(
+      CreateCanvasCommand(20, 4),
+      LineCommand(1, 2, 6, 2),
+      LineCommand(6, 3, 6, 4),
+      RectangleCommand(16, 1, 20, 3),
+      BucketFillCommand(10, 3, 'o')
+    ).toString should equal (
+      """----------------------
+        _|oooooooooooooooxxxxx|
+        _|xxxxxxooooooooox   x|
+        _|     xoooooooooxxxxx|
+        _|     xoooooooooooooo|
+        _----------------------""".stripMargin('_')
+    )
+  }
+}

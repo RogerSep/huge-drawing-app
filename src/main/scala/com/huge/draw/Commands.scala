@@ -75,3 +75,42 @@ case class RectangleCommand(x1: Int, y1: Int, x2: Int, y2: Int) extends Command 
     }
   }
 }
+
+case class BucketFillCommand(x: Int, y: Int, colour: Char) extends Command {
+  import scala.collection.mutable.Stack
+
+  private val point = Point(x, y)
+
+  private def pointsToChange(canvas: Canvas) = {
+    val originalColor = canvas.get(point)
+    var points: List[Point] = List()
+    val stack: Stack[Point] = Stack(point)
+    
+    while (!stack.isEmpty) {
+      val p = stack.pop
+      if (
+        canvas.contains(p) && 
+        canvas.get(p) == originalColor && 
+        !points.contains(p)
+      ) {
+        points = p :: points
+
+        stack.push(p.copy(x = p.x + 1))
+        stack.push(p.copy(x = p.x - 1))
+        stack.push(p.copy(y = p.y + 1))
+        stack.push(p.copy(y = p.y - 1))
+      }
+    }
+
+    points
+  }
+
+  def transform(canvas: Canvas) = {
+    val points = pointsToChange(canvas)
+
+    canvas.map { (x, y, c) =>
+      if (points.contains(Point(x, y))) colour
+      else c
+    }
+  }
+}
