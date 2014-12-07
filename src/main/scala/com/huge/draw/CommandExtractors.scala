@@ -1,5 +1,10 @@
 package com.huge.draw
 
+/**
+ * Extractors that take a list of strings and yield a Command.
+ * More commands should be easy to add or modify here.
+ */
+
 object CreateCanvasExtractor {
   def unapply(args: List[String]): Option[CreateCanvasCommand] =
     if (args.isEmpty || args.head != "C") None

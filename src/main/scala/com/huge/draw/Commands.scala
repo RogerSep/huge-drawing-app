@@ -1,6 +1,15 @@
 package com.huge.draw
 
+/**
+ * A representation of a command that can be applied over a canvas.
+ */
 sealed trait Command {
+  /**
+   * Transforms a given canvas into a new one after applying a transformation.
+   * Implementors should override this function for implementing their behaviour.
+   * @param canvas the canvas to transform
+   * @return the transformed canvas
+   */
   protected def transform(canvas: Canvas): Canvas
   def apply(canvas: Canvas): Canvas = {
     if (canvas.isEmpty) throw new UnsupportedCommand("The canvas is empty")
@@ -8,12 +17,28 @@ sealed trait Command {
   }
 }
 
+/**
+ * A point helper class
+ * @param x the x coordinate
+ * @param y the y coordinate
+ */
 case class Point(x: Int, y: Int) {
   override def toString = s"($x, $y)"
 
+  /**
+   * Calculates the distance between two points
+   * @param point
+   * @return the distance between this point and the point provided
+   */
   def distance(point: Point): Double = math.hypot((point.x - this.x), (point.y - this.y))
 }
 
+/**
+ * A command to create a canvas. Discards a previous canvas.
+ * Perhaps it can resize the previous canvas?
+ * @param width the width of the new canvas.
+ * @param height the height of the new canvas.
+ */
 case class CreateCanvasCommand(width: Int, height: Int) extends Command {
   if (width <= 0 || height <= 0) 
     throw new InvalidArguments(s"Width (${width}) and height (${height}) must be positive non-zero integers")
@@ -24,6 +49,13 @@ case class CreateCanvasCommand(width: Int, height: Int) extends Command {
   override def apply(canvas: Canvas): Canvas = transform(canvas)
 }
 
+/**
+ * Command to draw a Line inside a canvas.
+ * @param x1 the x coordinate of the first point
+ * @param y1 the y coordinate of the first point
+ * @param x2 the x coordinate of the second point
+ * @param y2 the y coordinate of the second point
+ */
 case class LineCommand(x1: Int, y1: Int, x2: Int, y2: Int) extends Command {
   if (x1 <= 0 || y1 <= 0 || x2 <= 0 || y2 <= 0)
     throw new InvalidArguments(s"Coordinates must be greater than 0 (($x1, $y1), ($x2, $y2))")
@@ -58,6 +90,13 @@ case class LineCommand(x1: Int, y1: Int, x2: Int, y2: Int) extends Command {
   }
 }
 
+/**
+ * Composed out of 4 line commands creates a rectangle in the canvas.
+ * @param x1
+ * @param y1
+ * @param x2
+ * @param y2
+ */
 case class RectangleCommand(x1: Int, y1: Int, x2: Int, y2: Int) extends Command {
   if (x1 <= 0 || y1 <= 0 || x2 <= 0 || y2 <= 0)
     throw new InvalidArguments(s"Coordinates must be greater than 0 (($x1, $y1), ($x2, $y2))")
@@ -81,6 +120,11 @@ case class BucketFillCommand(x: Int, y: Int, colour: Char) extends Command {
 
   private val point = Point(x, y)
 
+  /**
+   * Determines the poinst that need to be changed in the given canvas.
+   * @param canvas
+   * @return
+   */
   private def pointsToChange(canvas: Canvas) = {
     val originalColor = canvas.get(point)
     var points: List[Point] = List()
@@ -105,6 +149,11 @@ case class BucketFillCommand(x: Int, y: Int, colour: Char) extends Command {
     points
   }
 
+  /**
+   * Uses the flood fill algorithm to transform the given canvas.
+   * @param canvas the canvas to transform
+   * @return the transformed canvas
+   */
   def transform(canvas: Canvas) = {
     if (!canvas.contains(point))
       throw new OutOfBounds(s"The point $point is not within the canvas")
