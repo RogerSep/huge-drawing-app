@@ -328,6 +328,15 @@ class BucketFillCommandSpec extends FunSpec with Matchers {
         }
       }
 
+      it("fails if the point is out of the boundaries of the canvas") {
+        an [OutOfBounds] should be thrownBy {
+          Canvas()(
+            CreateCanvasCommand(4, 4),
+            BucketFillCommand(5, 5, '_')
+          )
+        }
+      }
+
       it("assumes white space when only the point is specified") {
         List("B", "1", "2") match {
           case BucketFillCommandExtractor(b) => b.colour should equal (' ')

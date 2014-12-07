@@ -1,7 +1,6 @@
 package com.huge
 
 import org.scalatest._
-import org.scalatest.matchers.ShouldMatchers
 
 trait InterceptedIO extends IO {
   var messages: StringBuffer = new StringBuffer()
@@ -19,7 +18,7 @@ trait NoQuitCommand extends InterceptedIO {
   val commands = List("A", "B", "C").toIterator
 }
 
-class UISpec extends FlatSpec with ShouldMatchers {
+class UISpec extends FlatSpec with Matchers {
   "UI" should "quit on command 'Q'" in {
     val ui = new UI with QuitCommand
     ui.run

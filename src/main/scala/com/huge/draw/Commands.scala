@@ -3,7 +3,7 @@ package com.huge.draw
 sealed trait Command {
   protected def transform(canvas: Canvas): Canvas
   def apply(canvas: Canvas): Canvas = {
-    if (canvas.isEmpty) canvas
+    if (canvas.isEmpty) throw new UnsupportedCommand("The canvas is empty")
     else transform(canvas)
   }
 }
@@ -43,7 +43,7 @@ case class LineCommand(x1: Int, y1: Int, x2: Int, y2: Int) extends Command {
 
   protected def transform(canvas: Canvas) = 
     if (!canvas.contains(p1) || !canvas.contains(p2)) 
-      throw new OutOfBounds("The point ${if (!canvas.contains(p1)) p1 else p2} is out of the canvas.")
+      throw new OutOfBounds(s"The point ${if (!canvas.contains(p1)) p1 else p2} is out of the canvas.")
     else drawLine(canvas)
 
   private def contains(x: Int, y: Int) =
@@ -106,6 +106,9 @@ case class BucketFillCommand(x: Int, y: Int, colour: Char) extends Command {
   }
 
   def transform(canvas: Canvas) = {
+    if (!canvas.contains(point))
+      throw new OutOfBounds(s"The point $point is not within the canvas")
+
     val points = pointsToChange(canvas)
 
     canvas.map { (x, y, c) =>

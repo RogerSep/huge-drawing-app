@@ -70,3 +70,15 @@ object BucketFillCommandExtractor {
       case _ => throw new InvalidArguments("A coordinate must be specified followed by an optional colour; whitespace is assumed when no colour is specified")
     }
 }
+
+object CommandExtractor {
+  def unapply(args: List[String]): Option[Command] = {
+    args match {
+      case CreateCanvasExtractor(c) => Some(c)
+      case LineCommandExtractor(l) => Some(l)
+      case RectangleCommandExtractor(r) => Some(r)
+      case BucketFillCommandExtractor(b) => Some(b)
+      case _ => None
+    }
+  }
+}
