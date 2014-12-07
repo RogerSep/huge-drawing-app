@@ -3,17 +3,17 @@ package com.huge
 import com.huge.draw._
 
 trait IO {
-  def print(message: String) = Console.print(message)
-  def println(message: String) = Console.println(message)
-  val commands: Iterator[String]
+  protected def print(message: String) = Console.print(message)
+  protected def println(message: String) = Console.println(message)
+  protected val commands: Iterator[String]
 }
 
 trait StdIO extends IO {
-  val commands = io.Source.stdin.getLines
+  protected val commands = io.Source.stdin.getLines
 }
 
 abstract class UI extends IO {
-  var canvas = Canvas()
+  private var canvas = Canvas()
 
   def run {
     print("Welcome; enter command: ")
@@ -48,4 +48,8 @@ abstract class UI extends IO {
       .split(" ")
       .toList
   }
+}
+
+class UIFromArguments(comm: Array[String]) extends UI {
+  protected val commands = comm.toIterator
 }
