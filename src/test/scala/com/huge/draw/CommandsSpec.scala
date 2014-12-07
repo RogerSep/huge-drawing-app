@@ -95,8 +95,8 @@ class CreateCanvasCommandSpec extends FunSpec with Matchers {
 
 
 class LineCommandSpec extends FunSpec with Matchers {
-    describe("Line command") {
-    describe("When non numeric parameters are passed") {
+  describe("Line command") {
+    describe("When invalid parameters are passed") {
       it("should throw InvalidArguments if any arguments are not integers") {        
         forAll(Table(
           ("a", "2", "3", "4"),
@@ -108,6 +108,21 @@ class LineCommandSpec extends FunSpec with Matchers {
           ("1", "2", "3.3", "4"),
           ("1", "2", "3", "4.4"),
           ("1", "2", "3", "")
+        )) { (x1, y1, x2, y2) =>
+          an [InvalidArguments] should be thrownBy {
+            LineCommandExtractor.unapply(List("L", x1, y1, x2, y2))
+          }
+        }
+      }
+
+      it("should not parse 0 or negative arguments") {
+        forAll (Table(
+          ("0", "0", "0", "0"),
+          ("0", "1", "1", "1"),
+          ("1", "0", "1", "1"),
+          ("-1", "1", "1", "1"),
+          ("1", "-1", "1", "1"),
+          ("-1", "-1", "1", "1")
         )) { (x1, y1, x2, y2) =>
           an [InvalidArguments] should be thrownBy {
             LineCommandExtractor.unapply(List("L", x1, y1, x2, y2))
@@ -161,6 +176,7 @@ class LineCommandSpec extends FunSpec with Matchers {
     }
 
     describe("When transforming a canvas") {
+      val blankCanvas = Canvas()(CreateCanvasCommand(20, 4))
       val result = 
         """----------------------
           _|                    |
@@ -170,7 +186,7 @@ class LineCommandSpec extends FunSpec with Matchers {
           _----------------------""".stripMargin('_')
 
       it("should draw a line when the line is within the canvas") {
-        Canvas()(CreateCanvasCommand(20, 4))(LineCommand(1, 2, 6, 2)).toString should equal (result)
+        blankCanvas(LineCommand(1, 2, 6, 2)).toString should equal (result)
       }
 
       it("given two coordinates, should draw the same line") {
@@ -178,14 +194,94 @@ class LineCommandSpec extends FunSpec with Matchers {
           ("1", "2", "6", "2"),
           ("6", "2", "1", "2")
         )) { (x1, y1, x2, y2) =>
-          Canvas()(CreateCanvasCommand(20, 4))(LineCommand(x1.toInt, y1.toInt, x2.toInt, y2.toInt)).toString should equal(result)
+          blankCanvas(LineCommand(x1.toInt, y1.toInt, x2.toInt, y2.toInt)).toString should equal(result)
         }
       }
 
       it("should throw when a coordinate is out of the boundaries of the canvas.") {
         an [OutOfBounds] should be thrownBy {
-          Canvas()(CreateCanvasCommand(20, 5))(LineCommand(1, 2, 21, 2))
+          blankCanvas(LineCommand(1, 2, 21, 2))
         }
+      }
+    }
+  }
+}
+
+class RectangleCommandSpec extends FunSpec with Matchers {
+  describe("Rectangle command") {
+    describe("When invalid parameters are passed") {
+      it("should throw InvalidArguments if any of them is not an integer") {        
+        forAll(Table(
+          ("a", "2", "3", "4"),
+          ("1", "a", "3", "4"),
+          ("1", "2", "a", "4"),
+          ("1", "2", "3", "a"),
+          ("1.1", "2", "3", "4"),
+          ("1", "2.2", "3", "4"),
+          ("1", "2", "3.3", "4"),
+          ("1", "2", "3", "4.4"),
+          ("1", "2", "3", "")
+        )) { (x1, y1, x2, y2) =>
+          an [InvalidArguments] should be thrownBy {
+            RectangleCommandExtractor.unapply(List("R", x1, y1, x2, y2))
+          }
+        }
+      }
+
+      it("should not parse 0 or negative arguments") {
+        forAll (Table(
+          ("0", "0", "0", "0"),
+          ("0", "1", "1", "1"),
+          ("1", "0", "1", "1"),
+          ("-1", "1", "1", "1"),
+          ("1", "-1", "1", "1"),
+          ("-1", "-1", "1", "1")
+        )) { (x1, y1, x2, y2) =>
+          an [InvalidArguments] should be thrownBy {
+            RectangleCommandExtractor.unapply(List("R", x1, y1, x2, y2))
+          }
+        }
+      }
+    }
+
+    describe("When parameters are passed") {
+      it("should throw when too many or too few arguments are passed") {
+        an [InvalidArguments] should be thrownBy {
+          RectangleCommandExtractor.unapply(List("R"))
+        }
+
+        an [InvalidArguments] should be thrownBy {
+          RectangleCommandExtractor.unapply(List("R", "1", "2", "3"))
+        }
+
+        an [InvalidArguments] should be thrownBy {
+          RectangleCommandExtractor.unapply(List("R", "1", "2", "3", "4", "5"))
+        }
+      }
+
+      it("should not parse when the first argument is not an 'R") {
+        List("X", "1", "1", "1", "1") match {
+          case RectangleCommandExtractor(r) => fail("R must be the first argument for correct parsing")
+          case _ => ()
+        }
+      }
+    }
+
+    describe("When transforming a canvas") {
+      it("should throw when the rectangle is out of the boundaries of the canvas") {
+        an [OutOfBounds] should be thrownBy {
+          Canvas()(CreateCanvasCommand(1, 1))(RectangleCommand(1, 1, 2, 2))
+        }
+      }
+
+      it("should draw a rectangle when the rectangle is in the canvas") {
+        Canvas()(CreateCanvasCommand(20, 4))(RectangleCommand(16, 1, 20, 3)).toString should equal (
+          """----------------------
+            _|               xxxxx|
+            _|               x   x|
+            _|               xxxxx|
+            _|                    |
+            _----------------------""".stripMargin('_'))
       }
     }
   }

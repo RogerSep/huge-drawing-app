@@ -57,3 +57,21 @@ case class LineCommand(x1: Int, y1: Int, x2: Int, y2: Int) extends Command {
     }
   }
 }
+
+case class RectangleCommand(x1: Int, y1: Int, x2: Int, y2: Int) extends Command {
+  if (x1 <= 0 || y1 <= 0 || x2 <= 0 || y2 <= 0)
+    throw new InvalidArguments(s"Coordinates must be greater than 0 (($x1, $y1), ($x2, $y2))")
+
+  private val edges = List(
+    LineCommand(x1, y1, x2, y1),
+    LineCommand(x1, y1, x1, y2),
+    LineCommand(x1, y2, x2, y2),
+    LineCommand(x2, y1, x2, y2)
+  )
+
+  protected def transform(canvas: Canvas) = {
+    edges.foldRight(canvas) { (lineCommand, canvas) =>
+      canvas.apply(lineCommand)
+    }
+  }
+}
